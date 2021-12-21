@@ -1,81 +1,45 @@
-use std::fs::File;
-use std::io::prelude::*;
+use std::{
+    fs::File,
+    io::{prelude::*,
+        BufReader},
+};
+
 
 fn main() {
-    part1();
-    part2();
+    let file = File::open("day1.txt").expect("file not found");
+    let reader = BufReader::new(file);
+
+    // more idomatic way to do this
+    // for lines in reader, parse str into 32 bit int then check for errors and collect all the parsed ints
+
+    let arr = reader.lines().map(|l| l.unwrap().parse::<i32>().unwrap()).collect::<Vec<i32>>();
+
+    part1(&arr);
+    part2(&arr);
 }
 
-fn part1(){
-    let mut f = File::open("day1.txt").expect("file not found");
-    let mut contents = String::new();
-    f.read_to_string(&mut contents).expect("something went wrong reading the file");
-    let lines: Vec<&str> = contents.split("\n").collect();
-    // convert to ints
-    let mut arr: Vec<i32> = Vec::new();
-    // create int to hold count
-    let mut greater = 0;
-    for line in lines {
-        let line = line.trim();
-        if line.len() > 0 {
-            let num: i32 = line.parse().unwrap();
-            //if num is greater than previosu num, set prev to num
-            
-            // check if arr is empty
-            if arr.len() == 0{
-                // continue
-                // ???
-            }
-            // else if
-            else if num > arr[arr.len() - 1] {
-                greater += 1;
-            }
+fn part1(arr: &Vec<i32>) {
+    // get count of number of numbers greater than previous
+    // let mut count = 0;
 
-            arr.push(num);
-        }
-    }
-    println!("part 1 ans: {}", greater);
+    // arr.iter().enumerate().skip(1).for_each(|(idx, num)| {
+    //     if num > &arr[idx - 1] {
+    //         count += 1;
+    //     }
+    // });
+
+    let count = arr.iter().zip(arr.iter().skip(1)).filter(|(a, b)| a < b).count();
+    println!("part 1 ans: {}", count);
 }
 
-fn part2(){
-    let mut f = File::open("day1.txt").expect("file not found");
-    let mut contents = String::new();
-    f.read_to_string(&mut contents).expect("something went wrong reading the file");
-    let lines: Vec<&str> = contents.split("\n").collect();
-    // convert to ints
-    let mut arr: Vec<i32> = Vec::new();
-    // create int to hold count
-    let mut greater = 0;
-    for line in lines {
-        if line.len() > 0 {
-            let num: i32 = line.parse().unwrap();
-            arr.push(num);
-        }
-    }
-    // create an array of slices of size 3
-    let mut arr_slices: Vec<&[i32]> = Vec::new();
+fn part2(arr: &Vec<i32>) {
+    // create a shadowing copy of array with sliding window of size 2
 
-    // create a slice of size 3
-    let mut slice: Vec<i32> = Vec::new();
-    // iterate through the array
-    for num in arr {
-        // if slice is empty, add num to slice
-        if slice.len() == 0 {
-            slice.push(num);
-        }
-        // else if slice is full, add slice to arr_slices
-        else if slice.len() == 3 {
-            arr_slices.push(slice.as_slice());
-            slice.clear();
-            slice.push(num);
-        }
-        // else add num to slice
-        else {
-            slice.push(num);
-        }
-    }
+    let arr_copy = arr.windows(3).map(|w| w.iter().sum::<i32>()).collect::<Vec<i32>>();
 
-    // get count of 
-
-    println!("part 2 ans: {}", arr.len());
+    // for each window of size 3, check if sum is greater than previous window
+    let count = arr_copy.iter().zip(arr_copy.iter().skip(1)).filter(|(a, b)| a < b).count();
+    
+    
+    println!("part 2 ans: {}", count);
 }
