@@ -4,30 +4,8 @@ use reqwest;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::env;
-use lambda_runtime::{handler_fn, Context, Error};
 
-const API: &str = "http://ip-api.com/json/";
-const REDIS_URL: String = env::var("REDIS_URL").expect("REDIS_URL must be set");
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Message {
-    message: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Hacker {
-    user: String,
-    ip: String,
-    lon: String,
-    lat: String,
-    time: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Location {
-    lat: String,
-    lon: String,
-}
 
 impl Default for Location {
     fn default() -> Location {
@@ -129,35 +107,3 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-
-// rust lambda handler
-async fn func(event: Value, _: Context) -> Result<Value, Error> {
-    let mut con: redis::Connection = Client::open(REDIS_URL).unwrap().get_connection().unwrap();
-
-    let method = event["requestContext"]["http"]["method"].as_str().unwrap();
-
-    if method == "POST" {
-        let message: Message = serde_json::from_str(&event["body"]["message"].to_string()).unwrap();
-        parseData(message, &mut con);
-        json!({
-            "statusCode": 200,
-            "body": "OK"
-        })
-    } else if method == "GET" {
-        let hackers: Vec<Hacker> = pull_hackers(&mut con);
-        let hackers_json: String = serde_json::to_string(&hackers).unwrap();
-        Ok(json!({
-            "statusCode": 200,
-            "body":
-                json!({
-                    "list": hackers_json
-                }) 
-        }))
-    }else {
-        json!({
-            "statusCode": 404,
-            "body": "Not Found"
-        })
-    }
-
-}
